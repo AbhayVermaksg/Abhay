@@ -1,5 +1,5 @@
-from ssl import get_default_verify_paths
 import tkinter as ttk
+from PIL import ImageTk,Image
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns 
@@ -10,13 +10,14 @@ data = pd.read_csv('treadmil-users.csv')
 
 app = ttk.Tk()
 app.title('Treadmill User Analysis')
-app.geometry('600x300')
+app.geometry('1080x720')
 
 graphs = ttk.Variable(app)
 values = {
     'Pair Plot': 'sns.pairplot(data= data)',
     'Jointplot': "sns.jointplot(data= data, x='{col1}', y='{col2}')",
-    'Bar Plot': "sns.barplot(data= data, x='{col1}', y='{col2}')"
+    'Bar Plot': "sns.barplot(data= data, x='{col1}', y='{col2}')",
+    'Box Plot': "sns.boxplot(data= data, x='{col1}', y='{col2}')"
 }
 graphs.set(values['Pair Plot'])
 y=10
@@ -35,18 +36,54 @@ ttk.OptionMenu(app, col1, *values).place(x= 100, y=40)
 col2 = ttk.Variable(app)
 col2.set(values[0])
 ttk.Label(app, text= 'Column 2').place(x=100,y=80)
-ttk.OptionMenu(app, col1, *values).place(x= 100, y=110)
+ttk.OptionMenu(app, col2, *values).place(x= 100, y=110)
 
 ## Option Menu 3
 col3 = ttk.Variable(app)
 col3.set(values[0])
 ttk.Label(app, text= 'Column 3').place(x=100,y=150)
-ttk.OptionMenu(app, col1, *values).place(x= 100, y=180)
+ttk.OptionMenu(app, col3, *values).place(x= 100, y=180)
+
+# Canvas
+cnv = ttk.Canvas(app, width=400 , height=200)
+cnv.place(x=200, y=100)
+
+# Label
+result = ttk.Variable(app)
+ttk.Label(app, textvariable=result).place(x=300,y=300)
 
 
 def show():
-    print(graphs.get())
-    print(col1.get())
+    global cnv
+    global img
+
+    column1 = col1.get()
+    column2 = col2.get()
+    column3 = col3.get()
+
+    g = graphs.get()
+
+    if 'col1' in g:
+        if column1 == 'Select':
+            result.set('Column 1 must be selected')
+            return
+    if 'col2' in g:
+        if column2 == 'Select':
+            result.set('Column 2 must be selected')
+            return
+    if 'col3' in g:
+        if column3 == 'Select':
+            result.set('Column 3 must be selected')
+            return
+
+    
+    fig = plt.figure(figsize=(5,2))
+    eval(graphs.get().format(col1= column1, col2 = column2 , col3= column3))
+    fig.savefig('graph.png')
+    img= ImageTk.PhotoImage(Image.open('graph.png').resize((400,200)))
+
+    cnv.create_image(0,0, anchor = ttk.NW, image=img)
+    result.set('Success')
 
 ttk.Button(app, text='Show', command= show).place(x=400,y=10)
 
